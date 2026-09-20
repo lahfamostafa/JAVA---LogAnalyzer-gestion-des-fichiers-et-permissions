@@ -75,5 +75,12 @@ public class LogAnalyzer {
         Map<String,Long> u = logsList.stream().collect(Collectors.groupingBy(Log::getUser , Collectors.counting()));
         System.out.println("\nActions par utilisateur : \n"+u);
     }
+    // 5
+    public void top3Files(){
+        Map<String,Long> fichiers = logsList.stream().collect(Collectors.groupingBy(Log::getFichier , Collectors.counting()));
+        List<Map.Entry<String,Long>> top3Files = fichiers.entrySet().stream().sorted((e1 ,e2)->e2.getValue().compareTo(e1.getValue())).limit(3).toList();
+        System.out.println("\nTop 3 des fichiers consultes : ");
+        System.out.print(top3Files + "  ");
+    }
     
 }
