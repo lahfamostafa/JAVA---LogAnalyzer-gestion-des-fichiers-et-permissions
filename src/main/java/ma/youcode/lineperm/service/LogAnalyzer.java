@@ -61,5 +61,9 @@ public class LogAnalyzer {
     public void totalActions(){
         System.out.println("\nTotal des actions : "+ logsList.stream().count());
     }
+    // 2
+    public void totalRefuse(){
+        System.out.println("\nAcces refuses : "+logsList.stream().filter(log -> log.getResultat().equals(false)).count());
+    }
     
 }
