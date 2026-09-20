@@ -18,6 +18,7 @@ public class FileService {
     private final Path saveFoder = Path.of("src/main/java/ma/youcode/lineperm/files");
     Map <String,Fichier> fileMap = new HashMap<>();
     private final Path dataFile = Path.of("src/main/java/ma/youcode/lineperm/Files.txt");
+    private LogAnalyzer logA = new LogAnalyzer();
 
     public FileService() {
         loadFile();
@@ -78,150 +79,138 @@ public class FileService {
         }
     }
 
-    public boolean hasAcces(String file, String perm ,String user, String newPerm){
-        LogAnalyzer log = new LogAnalyzer();
+    public void catCommande(String file ,String user){
+        if(user == null){
+            System.out.println("Tu dois se connecter d'abord");
+            return ;
+        }
         Fichier f = fileMap.get(file);
         if (f == null) {
             System.out.println("Le fichier est introuvable");
-            return false;
+            return ;
         }
-        if(perm.equals("w")){
-            if(user == null){
-                System.out.println("Tu dois se connecter d'abord");
-                log.saveLog(user, "Ecriture", file, false);
-                return false;
-            }
-            if (f.isAutherWrite() || (user.equals(f.getProprietaire()))) {
-                if(nanoCommande(file)){
-                    log.saveLog(user,"Ecriture",file,true);
-                    return true;
+        if (f.isAutherRead() || (user.equals(f.getProprietaire()))) {
+            Path foldesFiles = saveFoder.resolve(file);
+            try {
+                if (!Files.exists(foldesFiles)) {
+                    System.out.println("Fichier inexistant.");
+                    return ;
                 }
-                log.saveLog(user,"Ecriture",file,false);
-                return true;
-            }
-            System.out.println("vous n'avez pas la permission d'ecrire dans : "+file);
-        }else if(perm.equals("r")){
-            if(user == null){
-                System.out.println("Tu dois se connecter d'abord");
-                log.saveLog(user, "Lecture", file, false);
-                return false;
-            }
-            if (f.isAutherRead() || (user.equals(f.getProprietaire()))) {
-                if(catCommande(file)){
-                    log.saveLog(user,"Lecture",file,true);
-                    return true;
+                List<String> lines = Files.readAllLines(foldesFiles);
+                if(lines.isEmpty()){
+                    System.out.println("(fichier vide)");
+                    return ;
                 }
-                log.saveLog(user,"Lecture",file,false);
-                return true;
+                for(String ligne:lines){
+                    System.out.println(ligne);
+                }
+                logA.saveLog(user,"LECTURE",file,true);
+                return ;
+            } catch (Exception e) {
+                logA.saveLog(user,"LECTURE",file,false);
+                System.out.println(e.getStackTrace());
+                return ;
             }
+        }
+        logA.saveLog(user,"LECTURE",file,false);
+        System.out.println("vous n'avez pas la permission d'ecrire dans : "+file);
+    }
+
+    public void nanoCommande(String file ,String user){
+        if(user == null){
+            System.out.println("Tu dois se connecter d'abord");
+            return ;
+        }
+        Fichier f = fileMap.get(file);
+        if (f == null) {
+            System.out.println("Le fichier est introuvable");
+            return ;
+        }
+        if (f.isAutherWrite() || (user.equals(f.getProprietaire()))) {
+            Path foldesFiles = saveFoder.resolve(file);
+            System.out.println("=== Contenu actuel de " + file + " ===");
+            System.out.println("--- Entrez votre texte (tapez 'EOF' sur une nouvelle ligne pour enregistrer) ---");
+            catCommande(file,user);
+    
+            Scanner scanner = new Scanner(System.in);
+            StringBuilder sb = new StringBuilder();
+    
+            while (true) {
+                String ligne = scanner.nextLine();
+                if(ligne.contains("EOF"))break ;
+                sb.append(ligne);
+                sb.append(System.lineSeparator());
+            }
+            try {
+                Files.writeString(foldesFiles, sb.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                System.out.println("Modifications enregistrees dans " + file);
+                logA.saveLog(user,"ECRITURE",file,true);
+                return ;
+            } catch (IOException e) {
+                System.err.println("Erreur lors de l'enregistrement dans le fichier : " + e.getMessage());
+                logA.saveLog(user,"ECRITURE",file,false);
+                return ;
+            }
+            }
+            logA.saveLog(user,"ECRITURE",file,false);
             System.out.println("vous n'avez pas la permission de lire : "+file);
-        }else if(perm.equals("d")){
-            if(user == null){
-                System.out.println("Tu dois se connecter d'abord");
-                log.saveLog(user, "Supprimer", file, false);
-                return false;
+    }
+
+    public void chmodCommande(String file ,String user, String newPerm){
+        if(user == null){
+            System.out.println("Tu dois se connecter d'abord");
+            return ;
+        }
+        Fichier f = fileMap.get(file);
+        if (f == null) {
+            System.out.println("Le fichier est introuvable");
+            return ;
+        }
+        if (user.equals(f.getProprietaire())) {
+            Fichier fichier = fileMap.get(file);
+    
+            if (fichier == null) {
+                System.out.println("Fichier introuvable : " + file);
+                return;
             }
-            if (f.isAutherDelete() || (user.equals(f.getProprietaire()))) {
-                if(rmCommande(file)){
-                    log.saveLog(user,"Supprimer",file,true);
-                    return true;
+    
+            String ancientPerm = fichier.getPersmission();
+    
+            if (newPerm.startsWith("-")) {
+                if(newPerm.contains("w")) fichier.setAutherWrite(false);
+                if(newPerm.contains("r")) fichier.setAutherRead(false);
+                if(newPerm.contains("d")) fichier.setAutherDelete(false);
+            }else{
+                if(newPerm.contains("w")) fichier.setAutherWrite(true);
+                if(newPerm.contains("r")) fichier.setAutherRead(true);
+                if(newPerm.contains("d")) fichier.setAutherDelete(true);
+            }
+            
+            System.out.println(file + " : " + ancientPerm + "  ->  " + fichier.getPersmission());
+            try {
+                List<String> lignes = new ArrayList<>();
+                for(Fichier li:fileMap.values()){
+                    String ligne = li.getName() + "," +
+                                li.getProprietaire() + "," +
+                                li.isOwnerRead() + "," +
+                                li.isOwnerWrite() + "," +
+                                li.isOwnerDelete() + "," +
+                                li.isAutherRead() + "," +
+                                li.isAutherWrite() + "," +
+                                li.isAutherDelete();
+                    lignes.add(ligne);
                 }
-                log.saveLog(user,"Supprimer",file,false);
-                return true;
+                Files.write(dataFile, lignes);
+            } catch (Exception e) {
+                System.out.println("Erreur lors de la mise a jour de Files.txt : " +e.getStackTrace());
             }
-            System.out.println("vous n'avez pas la permission de supprimer : "+file);
-        }
-        return false;
+                return ;
+            }
+            System.out.println("vous n'avez pas la permission de modifier les permssions : "+file);
     }
 
-    public boolean catCommande(String file){
-        Path foldesFiles = saveFoder.resolve(file);
-        try {
-            if (!Files.exists(foldesFiles)) {
-                System.out.println("Fichier inexistant.");
-                return false;
-            }
-            List<String> lines = Files.readAllLines(foldesFiles);
-            if(lines.isEmpty()){
-                System.out.println("(fichier vide)");
-                return true;
-            }
-            for(String f:lines){
-                System.out.println(f);
-            }
-            return true;
-        } catch (Exception e) {
-            System.out.println(e.getStackTrace());
-            return false;
-        }
-    }
-
-    public boolean nanoCommande(String file){
-        Path foldesFiles = saveFoder.resolve(file);
-        System.out.println("=== Contenu actuel de " + file + " ===");
-        System.out.println("--- Entrez votre texte (tapez 'EOF' sur une nouvelle ligne pour enregistrer) ---");
-        catCommande(file);
-
-        Scanner scanner = new Scanner(System.in);
-        StringBuilder sb = new StringBuilder();
-
-        while (true) {
-            String ligne = scanner.nextLine();
-            if(ligne.contains("EOF"))break ;
-            sb.append(ligne);
-            sb.append(System.lineSeparator());
-        }
-        try {
-            Files.writeString(foldesFiles, sb.toString(), StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            System.out.println("Modifications enregistrees dans " + file);
-            return true;
-        } catch (IOException e) {
-            System.err.println("Erreur lors de l'enregistrement dans le fichier : " + e.getMessage());
-            return false;
-        }
-    }
-
-    public void chmodCommande(String file, String newPerm){
-        Fichier fichier = fileMap.get(file);
-
-        if (fichier == null) {
-            System.out.println("Fichier introuvable : " + file);
-            return;
-        }
-
-        String ancientPerm = fichier.getPersmission();
-
-        if (newPerm.startsWith("-")) {
-            if(newPerm.contains("w")) fichier.setAutherWrite(false);
-            if(newPerm.contains("r")) fichier.setAutherRead(false);
-            if(newPerm.contains("d")) fichier.setAutherDelete(false);
-        }else{
-            if(newPerm.contains("w")) fichier.setAutherWrite(true);
-            if(newPerm.contains("r")) fichier.setAutherRead(true);
-            if(newPerm.contains("d")) fichier.setAutherDelete(true);
-        }
-        
-        System.out.println(file + " : " + ancientPerm + "  ->  " + fichier.getPersmission());
-        try {
-            List<String> lignes = new ArrayList<>();
-            for(Fichier f:fileMap.values()){
-                String ligne = f.getName() + "," +
-                           f.getProprietaire() + "," +
-                           f.isOwnerRead() + "," +
-                           f.isOwnerWrite() + "," +
-                           f.isOwnerDelete() + "," +
-                           f.isAutherRead() + "," +
-                           f.isAutherWrite() + "," +
-                           f.isAutherDelete();
-                lignes.add(ligne);
-            }
-            Files.write(dataFile, lignes);
-        } catch (Exception e) {
-            System.out.println("Erreur lors de la mise a jour de Files.txt : " +e.getStackTrace());
-        }
-    }
-
-    public boolean rmCommande(String file){
+    public boolean rmCommande(String file ,String user){
+        logA.saveLog(user,"SUPPRIMER",file,false);
         return true;
     }
 }

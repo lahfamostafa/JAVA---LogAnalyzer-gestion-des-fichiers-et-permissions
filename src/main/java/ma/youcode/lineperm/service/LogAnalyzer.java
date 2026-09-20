@@ -1,17 +1,25 @@
 package ma.youcode.lineperm.service;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import ma.youcode.lineperm.model.Log;
 
 public class LogAnalyzer {
     private final Path pathFile = Path.of("src/main/java/ma/youcode/lineperm/Logs.log");
     
+    private List<Log> logsList = new ArrayList<>();
     public LogAnalyzer() {
+        loadLogs();
     }
 
     public void saveLog(String user,String action,String file, boolean resultat){
@@ -23,7 +31,31 @@ public class LogAnalyzer {
         }
     }
     
-    public void loadLogs(){
+    private void loadLogs(){
+        try {
+            List<String> logsLis = Files.readAllLines(pathFile);
+            for (String string : logsLis) {
+                String[] line = string.split(";");
+                LocalDate date = LocalDate.parse(line[0]);
+                LocalTime heure = LocalTime.parse(line[1]);
+                String user = line[2];
+                String action = line[3];
+                String fichier = line[4];
+                String resultat = line[5];
+                boolean status = Boolean.parseBoolean(resultat.equals("OK")? "true" : "false");
 
+                Log log = new Log(date, heure, user, action, fichier, status);
+                logsList.add(log);
+            }
+        } catch (IOException e) {
+            System.out.println(e.getStackTrace());
+        }
     }
+
+    public void afficherLogs(){
+        for (Log log : logsList) {
+            System.out.println(log.getAction()+"  "+log.getResultat());
+        }
+    }
+    
 }

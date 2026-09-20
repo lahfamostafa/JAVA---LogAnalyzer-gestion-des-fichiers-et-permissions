@@ -3,3 +3,4 @@ src/main/java/ma/youcode/lineperm/files/
 lib/
 src/main/java/ma/youcode/lineperm/Files.txt
 src/main/java/ma/youcode/lineperm/Users.txt
+src/main/java/ma/youcode/lineperm/Logs.log
