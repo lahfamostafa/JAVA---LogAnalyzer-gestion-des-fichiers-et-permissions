@@ -97,5 +97,11 @@ public class LogAnalyzer {
             System.out.printf("%-10s | %-5s | %-8s | %-7s | %-10s%n" , log.getDate(),log.getHeure(),log.getAction(),log.getFichier(),log.getResultat());
         }
     }
+    // 7
+    public void userActif(){
+        Map<String,Long> userActif = logsList.stream().collect(Collectors.groupingBy(Log::getUser,Collectors.counting()));
+        List<Map.Entry<String,Long>> u = userActif.entrySet().stream().sorted((e1 , e2)-> e2.getValue().compareTo(e1.getValue())).limit(1).toList();
+        System.out.println("\nUtilisateur le plus actif : "+u);
+    }
     
 }
