@@ -57,5 +57,9 @@ public class LogAnalyzer {
             System.out.println(log.getAction()+"  "+log.getResultat());
         }
     }
+    // 1
+    public void totalActions(){
+        System.out.println("\nTotal des actions : "+ logsList.stream().count());
+    }
     
 }
