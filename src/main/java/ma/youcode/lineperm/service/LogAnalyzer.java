@@ -65,5 +65,10 @@ public class LogAnalyzer {
     public void totalRefuse(){
         System.out.println("\nAcces refuses : "+logsList.stream().filter(log -> log.getResultat().equals(false)).count());
     }
+    // 3
+    public void usersDistinct(){
+        System.out.println("\nTotal des utilisateurs distincts : ");
+        logsList.stream().map(Log::getUser).distinct().forEach(System.out::println);
+    }
     
 }
