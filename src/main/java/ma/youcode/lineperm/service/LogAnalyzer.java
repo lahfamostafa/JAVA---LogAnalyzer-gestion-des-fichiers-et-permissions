@@ -70,5 +70,10 @@ public class LogAnalyzer {
         System.out.println("\nTotal des utilisateurs distincts : ");
         logsList.stream().map(Log::getUser).distinct().forEach(System.out::println);
     }
+    // 4
+    public void actionParUser(){
+        Map<String,Long> u = logsList.stream().collect(Collectors.groupingBy(Log::getUser , Collectors.counting()));
+        System.out.println("\nActions par utilisateur : \n"+u);
+    }
     
 }
