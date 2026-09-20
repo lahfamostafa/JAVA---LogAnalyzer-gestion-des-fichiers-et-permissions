@@ -82,5 +82,20 @@ public class LogAnalyzer {
         System.out.println("\nTop 3 des fichiers consultes : ");
         System.out.print(top3Files + "  ");
     }
+    // 6
+    public void userRefuse(){
+        System.out.print("Saisir le nom de l'utilisateur :");
+        Scanner scanner = new Scanner(System.in);
+        String nom = scanner.nextLine();
+        List<Log> logsrefus = logsList.stream().filter(user -> user.getUser().equals(nom)).filter(res -> res.getResultat() == false).toList();
+        System.out.println("\n\n==================================================");
+        System.out.println("ACCES REFUSES POUR L'UTILISATEUR : "+nom);
+        System.out.println("==================================================");
+        System.out.println("Date       | Heure | Action   | Fichier | Statut");
+        System.out.println("--------------------------------------------------");
+        for (Log log : logsrefus) {
+            System.out.printf("%-10s | %-5s | %-8s | %-7s | %-10s%n" , log.getDate(),log.getHeure(),log.getAction(),log.getFichier(),log.getResultat());
+        }
+    }
     
 }
