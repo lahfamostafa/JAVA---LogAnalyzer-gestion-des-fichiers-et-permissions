@@ -103,5 +103,9 @@ public class LogAnalyzer {
         List<Map.Entry<String,Long>> u = userActif.entrySet().stream().sorted((e1 , e2)-> e2.getValue().compareTo(e1.getValue())).limit(1).toList();
         System.out.println("\nUtilisateur le plus actif : "+u);
     }
-    
+    // 8
+    public void actionsParType(){
+        Map<String,Long> actions = logsList.stream().collect(Collectors.groupingBy(Log::getAction , Collectors.counting()));
+        System.out.println("\nRepartition des actions par type : "+actions);
+    }
 }
