@@ -45,10 +45,10 @@ public class ConsoleApp{
 
         switch (commandes[0].trim()) {
             case "signup":
-                login();
+                signup();
                 break;
             case "login":
-                signup();
+                login();
                 break;
             case "help":
                 System.out.println("help");
@@ -150,7 +150,7 @@ public class ConsoleApp{
         System.out.print("password : ");
         String password = scanner.nextLine();
 
-        if (us.login(user, password)) {
+        if (us.signup(user, password)) {
             utilisateurConnecte = user;
         }
         return;
@@ -167,7 +167,7 @@ public class ConsoleApp{
         System.out.print("password : ");
         String password = scanner.nextLine();
 
-        if (us.signup(user, password)) {
+        if (us.login(user, password)) {
             utilisateurConnecte = user;
         }
         return;
